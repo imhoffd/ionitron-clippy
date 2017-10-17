@@ -1,0 +1,9 @@
+{
+    "name": "ionitron-clippy",
+    "app_id": "04baa4c0",
+    "type": "ionic-angular",
+    "integrations": {
+      "cordova": {}
+    }
+  }
+  
