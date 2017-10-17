@@ -27,8 +27,7 @@ declare global {
   namespace JSXElements {
       export interface IonitronClippyAttributes extends HTMLAttributes {
         
-          first?: string,
-          last?: string
+          message?: string
       }
   }
 }

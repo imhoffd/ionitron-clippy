@@ -2,17 +2,60 @@ ionitron-clippy {
   font-family: Courier New, Courier, monospace;
   font-weight: bold;
 
-  .ionitron {
-    height: 150px;
-    -webkit-animation-name: Floatingx;
-    -webkit-animation-duration: 3s;
-    -webkit-animation-iteration-count: infinite;
-    -webkit-animation-timing-function: ease-in-out;
+  .ionitron-clippy-container{
+
+    position:fixed;
+    right:25px;
+    bottom:25px;
+
+    .ionitron {
+      height: 150px;
+      -webkit-animation-name: Floatingx;
+      -webkit-animation-duration: 3s;
+      -webkit-animation-iteration-count: infinite;
+      -webkit-animation-timing-function: ease-in-out;
+    }
+  
+    @-webkit-keyframes Floatingx{
+      from {-webkit-transform:translate(0, 0px);}
+      65% {-webkit-transform:translate(0, 15px);}
+      to {-webkit-transform: translate(0, -0px);    }
+    }
+
   }
 
-  @-webkit-keyframes Floatingx{
-    from {-webkit-transform:translate(0, 0px);}
-    65% {-webkit-transform:translate(0, 15px);}
-    to {-webkit-transform: translate(0, -0px);    }
+  /* CSS talk bubble */
+  .talk-bubble {
+    margin: 40px;
+    display: inline-block;
+    position: relative;
+    width: 200px;
+    height: auto;
+    background-color: lightyellow;
   }
+
+  .tri-right.right-in:after{
+    content: ' ';
+    position: absolute;
+    width: 0;
+    height: 0;
+    left: auto;
+    right: -20px;
+    bottom: 38px;
+    top: auto;
+    border: 12px solid;
+    border-color: lightyellow transparent transparent lightyellow;
+  }
+  /* talk bubble contents */
+  .talktext{
+    padding: 1em;
+    text-align: left;
+    line-height: 1.5em;
+  }
+  .talktext p{
+    /* remove webkit p margins */
+    -webkit-margin-before: 0em;
+    -webkit-margin-after: 0em;
+  }
+
 }
