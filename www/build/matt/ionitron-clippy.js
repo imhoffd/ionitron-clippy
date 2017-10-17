@@ -1,4 +1,6 @@
 /*! Built with http://stenciljs.com */
+
+matt.loadStyles("ionitron-clippy",".container {\n  position: fixed;\n  right: 25px;\n  bottom: 25px;\n  font-family: Arial, sans-serif;\n  font-size: 14px;\n  color: #444;\n}\n\n.container .ionitron {\n  height: 150px;\n  -webkit-animation-name: Floatingx;\n  -webkit-animation-duration: 3s;\n  -webkit-animation-iteration-count: infinite;\n  -webkit-animation-timing-function: ease-in-out;\n}\n\n@-webkit-keyframes Floatingx {\n  from {\n    -webkit-transform: translate(0, 0px);\n  }\n  65% {\n    -webkit-transform: translate(0, 15px);\n  }\n  to {\n    -webkit-transform: translate(0, 0px);\n  }\n}\n\n/* CSS talk bubble */\n.talk-bubble {\n  margin: 40px;\n  display: inline-block;\n  position: relative;\n  width: 200px;\n  height: auto;\n  background-color: lightyellow;\n  border: 2px solid #444;\n  border-radius: 10px;\n  -webkit-border-radius: 10px;\n  -moz-border-radius: 10px;\n}\n\n.talk-bubble:after, .talk-bubble:before {\n  content: ' ';\n  position: absolute;\n  width: 0;\n  height: 0;\n  top: auto;\n  left: auto;\n}\n\n.talk-bubble:after {\n  right: -20px;\n  bottom: 38px;\n  border: 12px solid;\n  border-color: lightyellow transparent transparent lightyellow;\n}\n\n.talk-bubble:before {\n  right: -25px;\n  bottom: 40px;\n  border: 12px solid;\n  border-color: #444 transparent transparent #444;\n}\n\n.talk-text {\n  padding: 10px 13px;\n  text-align: left;\n  line-height: 1.5em;\n}\n\n.talk-text p {\n  /* remove webkit p margins */\n  -webkit-margin-before: 0em;\n  -webkit-margin-after: 0em;\n}\n:host(.hydrated){visibility:inherit !important}");
 matt.loadComponents(
 
 /**** module id (dev mode) ****/
@@ -6,6 +8,9 @@ matt.loadComponents(
 
 /**** component modules ****/
 function importComponent(exports, h, t, Context, publicPath) {
+"use strict";
+// @stencil/core
+
 var MyName = /** @class */ (function () {
     function MyName() {
     }
@@ -19,14 +24,14 @@ var MyName = /** @class */ (function () {
     return MyName;
 }());
 
-exports['IONITRON-CLIPPY'] = MyName;
+exports['ionitron-clippy'] = MyName;
 },
 
 
 /***************** ionitron-clippy *****************/
 [
 /** ionitron-clippy: tag **/
-"IONITRON-CLIPPY",
+"ionitron-clippy",
 
 /** ionitron-clippy: members **/
 [
@@ -37,4 +42,4 @@ exports['IONITRON-CLIPPY'] = MyName;
 {}
 
 ]
-)
+);

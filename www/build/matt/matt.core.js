@@ -54,6 +54,7 @@ var s=document.querySelector("script[data-core='matt.core.js'][data-path]");if(s
      */
     var SSR_VNODE_ID = 'data-ssrv';
     var SSR_CHILD_ID = 'data-ssrc';
+
     /**
      * Key Name to Key Code Map
      */
@@ -570,7 +571,20 @@ var s=document.querySelector("script[data-core='matt.core.js'][data-path]");if(s
         // Class
         if (name === 'class' && !isSvg) {
             if (oldValue !== newValue) {
-                elm.className = newValue;
+                var oldList = oldValue == null ? [] : oldValue.trim().split(/\s+/);
+                var newList = newValue == null ? [] : newValue.trim().split(/\s+/);
+                var i = void 0,
+                    listLength = void 0;
+                for (i = 0, listLength = oldList.length; i < listLength; i += 1) {
+                    if (newList.indexOf(oldList[i]) === -1) {
+                        elm.classList.remove(oldList[i]);
+                    }
+                }
+                for (i = 0, listLength = newList.length; i < listLength; i += 1) {
+                    if (oldList.indexOf(newList[i]) === -1) {
+                        elm.classList.add(newList[i]);
+                    }
+                }
             }
             // Style
         } else if (name === 'style') {
@@ -673,13 +687,13 @@ var s=document.querySelector("script[data-core='matt.core.js'][data-path]");if(s
      * Modified for Stencil's renderer and slot projection
      */
     var isSvgMode = false;
-    function createRendererPatch(plt, domApi) {
+    function createRendererPatch(plt, domApi, supportsNativeShadowDom) {
         // createRenderer() is only created once per app
         // the patch() function which createRenderer() returned is the function
         // which gets called numerous times by each component
         function createElm(vnode, parentElm, childIndex) {
             var i = 0;
-            if (vnode.vtag === 'slot') {
+            if (vnode.vtag === 'slot' && !useNativeShadowDom) {
                 if (hostContentNodes) {
                     // special case for manually relocating host content nodes
                     // to their new home in either a named slot or the default slot
@@ -721,12 +735,17 @@ var s=document.querySelector("script[data-core='matt.core.js'][data-path]");if(s
                 isSvgMode = vnode.vtag === 'svg' ? true : vnode.vtag === 'foreignObject' ? false : isSvgMode;
                 // add css classes, attrs, props, listeners, etc.
                 updateElement(plt, null, vnode, isSvgMode);
+                if (scopeId !== null && elm._scopeId !== scopeId) {
+                    // if there is a scopeId and this is the initial render
+                    // then let's add the scopeId as an attribute
+                    domApi.$setAttribute(elm, elm._scopeId = scopeId, '');
+                }
                 var children = vnode.vchildren;
                 if (isDef(ssrId)) {
                     // SSR ONLY: this is an SSR render and this
                     // logic does not run on the client
                     // give this element the SSR child id that can be read by the client
-                    domApi.$setAttribute(vnode.elm, SSR_CHILD_ID, ssrId + '.' + childIndex + (hasChildNodes(children) ? '' : '.'));
+                    domApi.$setAttribute(elm, SSR_CHILD_ID, ssrId + '.' + childIndex + (hasChildNodes(children) ? '' : '.'));
                 }
                 if (children) {
                     var childNode = void 0;
@@ -873,26 +892,26 @@ var s=document.querySelector("script[data-core='matt.core.js'][data-path]");if(s
             }
             return map;
         }
-        function patchVNode(oldVnode, newVnode) {
-            var elm = newVnode.elm = oldVnode.elm;
-            var oldChildren = oldVnode.vchildren;
-            var newChildren = newVnode.vchildren;
-            isSvgMode = newVnode.elm && newVnode.elm.parentElement != null && newVnode.elm.ownerSVGElement !== undefined;
-            isSvgMode = newVnode.vtag === 'svg' ? true : newVnode.vtag === 'foreignObject' ? false : isSvgMode;
-            if (isUndef(newVnode.vtext)) {
+        function patchVNode(oldVNode, newVNode) {
+            var elm = newVNode.elm = oldVNode.elm;
+            var oldChildren = oldVNode.vchildren;
+            var newChildren = newVNode.vchildren;
+            isSvgMode = newVNode.elm && newVNode.elm.parentElement != null && newVNode.elm.ownerSVGElement !== undefined;
+            isSvgMode = newVNode.vtag === 'svg' ? true : newVNode.vtag === 'foreignObject' ? false : isSvgMode;
+            if (isUndef(newVNode.vtext)) {
                 // element node
-                if (newVnode.vtag !== 'slot') {
+                if (newVNode.vtag !== 'slot') {
                     // either this is the first render of an element OR it's an update
                     // AND we already know it's possible it could have changed
                     // this updates the element's css classes, attrs, props, listeners, etc.
-                    updateElement(plt, oldVnode, newVnode, isSvgMode);
+                    updateElement(plt, oldVNode, newVNode, isSvgMode);
                 }
                 if (isDef(oldChildren) && isDef(newChildren)) {
                     // looks like there's child vnodes for both the old and new vnodes
                     updateChildren(elm, oldChildren, newChildren);
                 } else if (isDef(newChildren)) {
                     // no old child vnodes, but there are new child vnodes to add
-                    if (isDef(oldVnode.vtext)) {
+                    if (isDef(oldVNode.vtext)) {
                         // the old vnode was text, so be sure to clear it out
                         domApi.$setTextContent(elm, '');
                     }
@@ -905,32 +924,53 @@ var s=document.querySelector("script[data-core='matt.core.js'][data-path]");if(s
             } else if (elm._hostContentNodes && elm._hostContentNodes.defaultSlot) {
                 // this element has slotted content
                 var parentElement = elm._hostContentNodes.defaultSlot[0].parentElement;
-                domApi.$setTextContent(parentElement, newVnode.vtext);
+                domApi.$setTextContent(parentElement, newVNode.vtext);
                 elm._hostContentNodes.defaultSlot = [parentElement.childNodes[0]];
-            } else {
+            } else if (oldVNode.vtext !== newVNode.vtext) {
                 // update the text content for the text only vnode
-                domApi.$setTextContent(elm, newVnode.vtext);
+                // and also only if the text is different than before
+                domApi.$setTextContent(elm, newVNode.vtext);
             }
         }
         // internal variables to be reused per patch() call
         var isUpdate = void 0,
             hostContentNodes = void 0,
-            ssrId = void 0;
-        return function patch(oldVnode, newVnode, isUpdatePatch, hostElementContentNodes, ssrPatchId) {
+            useNativeShadowDom = void 0,
+            ssrId = void 0,
+            scopeId = void 0;
+        return function patch(oldVNode, newVNode, isUpdatePatch, hostElementContentNodes, encapsulation, ssrPatchId) {
             // patchVNode() is synchronous
             // so it is safe to set these variables and internally
             // the same patch() call will reference the same data
             hostContentNodes = hostElementContentNodes;
             ssrId = ssrPatchId;
+            var tag = domApi.$tagName(oldVNode.elm).toLowerCase();
+            scopeId = encapsulation === 2 /* ScopedCss */ || encapsulation === 1 /* ShadowDom */ && !supportsNativeShadowDom ? 'data-' + tag : null;
+            // use native shadow dom only if the component wants to use it
+            // and if this browser supports native shadow dom
+            useNativeShadowDom = encapsulation === 1 /* ShadowDom */ && supportsNativeShadowDom;
+            if (!isUpdate) {
+                if (useNativeShadowDom) {
+                    // this component SHOULD use native slot/shadow dom
+                    // this browser DOES support native shadow dom
+                    // and this is the first render
+                    // let's create that shadow root
+                    oldVNode.elm = oldVNode.elm.attachShadow({ mode: 'open' });
+                } else if (scopeId) {
+                    // this host element should use scoped css
+                    // add the scope attribute to the host
+                    domApi.$setAttribute(oldVNode.elm, scopeId + '-host', '');
+                }
+            }
             // synchronous patch
-            patchVNode(oldVnode, newVnode);
+            patchVNode(oldVNode, newVNode);
             if (isDef(ssrId)) {
                 // SSR ONLY: we've been given an SSR id, so the host element
                 // should be given the ssr id attribute
-                domApi.$setAttribute(oldVnode.elm, SSR_VNODE_ID, ssrId);
+                domApi.$setAttribute(oldVNode.elm, SSR_VNODE_ID, ssrId);
             }
             // return our new vnode
-            return newVnode;
+            return newVNode;
         };
     }
     function invokeDestroy(vnode) {
@@ -1035,7 +1075,7 @@ var s=document.querySelector("script[data-core='matt.core.js'][data-path]");if(s
     }
 
     function parseComponentRegistry(cmpRegistryData, registry, attr) {
-        // tag name will always be upper case
+        // tag name will always be lower case
         var cmpMeta = {
             tagNameMeta: cmpRegistryData[0],
             membersMeta: {
@@ -1046,22 +1086,22 @@ var s=document.querySelector("script[data-core='matt.core.js'][data-path]");if(s
                 'color': { memberType: 1 /* Prop */, attribName: 'color' }
             }
         };
-        // this comonent's module id
-        cmpMeta.moduleId = cmpRegistryData[1];
         // map of the modes w/ bundle id and style data
-        cmpMeta.styleIds = cmpRegistryData[2] || {};
+        cmpMeta.bundleIds = cmpRegistryData[1];
         // parse member meta
         // this data only includes props that are attributes that need to be observed
         // it does not include all of the props yet
         parseMembersData(cmpMeta, cmpRegistryData[3], attr);
-        if (cmpRegistryData[4]) {
-            // parse listener meta
-            cmpMeta.listenersMeta = cmpRegistryData[4].map(parseListenerData);
-        }
+        // encapsulation
+        cmpMeta.encapsulation = cmpRegistryData[4];
         // slot
         cmpMeta.slotMeta = cmpRegistryData[5];
+        if (cmpRegistryData[6]) {
+            // parse listener meta
+            cmpMeta.listenersMeta = cmpRegistryData[6].map(parseListenerData);
+        }
         // bundle load priority
-        cmpMeta.loadPriority = cmpRegistryData[6];
+        cmpMeta.loadPriority = cmpRegistryData[7];
         return registry[cmpMeta.tagNameMeta] = cmpMeta;
     }
     function parseListenerData(listenerData) {
@@ -1088,7 +1128,7 @@ var s=document.querySelector("script[data-core='matt.core.js'][data-path]");if(s
         }
     }
     function parseComponentMeta(registry, moduleImports, cmpMetaData, attr) {
-        // tag name will always be upper case
+        // tag name will always be lowser case
         var cmpMeta = registry[cmpMetaData[0]];
         // get the component class which was added to moduleImports
         // using the tag as the key on the export object
@@ -1105,8 +1145,6 @@ var s=document.querySelector("script[data-core='matt.core.js'][data-path]");if(s
         cmpMeta.propsWillChangeMeta = cmpMetaData[4];
         // component instance prop DID change methods
         cmpMeta.propsDidChangeMeta = cmpMetaData[5];
-        // is shadow
-        cmpMeta.isShadowMeta = !!cmpMetaData[6];
     }
     function parseEventData(d) {
         return {
@@ -1180,7 +1218,7 @@ var s=document.querySelector("script[data-core='matt.core.js'][data-path]");if(s
                 // get the component meta data about this component
                 var cmpMeta = plt.getComponentMeta(elm);
                 // only collects slot references if this component even has slots
-                plt.connectHostElement(elm, cmpMeta.slotMeta);
+                plt.connectHostElement(cmpMeta, elm);
                 // start loading this component mode's bundle
                 // if it's already loaded then the callback will be synchronous
                 plt.loadBundle(cmpMeta, elm, function loadComponentCallback() {
@@ -1275,48 +1313,6 @@ var s=document.querySelector("script[data-core='matt.core.js'][data-path]");if(s
         }
     }
 
-    /**
-     * Create a mutation observer for the elm.
-     *
-     * @param plt platform api
-     * @param elm the element to create an observer for
-     */
-    function createMutationObserver(plt, elm) {
-        if (plt.isClient) {
-            var elementReset = createElementReset(plt, elm);
-            elm._observer = new MutationObserver(function (mutations) {
-                mutations.forEach(elementReset);
-            });
-        }
-    }
-    function createElementReset(plt, elm) {
-        return function () {
-            var cmpMeta = plt.getComponentMeta(elm);
-            elm._vnode = null;
-            plt.connectHostElement(elm, cmpMeta.slotMeta);
-            stopObserving(plt, elm);
-            elm._render();
-            startObserving(plt, elm);
-        };
-    }
-    /**
-     * Start the observer that each element has
-     *
-     * @param elm the element to watch
-     */
-    function startObserving(plt, elm) {
-        if (plt.isClient && elm._observer) {
-            return elm._observer.observe(elm, {
-                'childList': true
-            });
-        }
-    }
-    function stopObserving(plt, elm) {
-        if (plt.isClient && elm._observer) {
-            return elm._observer.disconnect();
-        }
-    }
-
     function queueUpdate(plt, elm) {
         // only run patch if it isn't queued already
         if (!elm._isQueuedForUpdate) {
@@ -1362,10 +1358,10 @@ var s=document.querySelector("script[data-core='matt.core.js'][data-path]");if(s
                             userPromise = elm.$instance.componentWillLoad();
                         }
                     } catch (e) {
-                        plt.onError(3 /* WillLoadError */, e, elm);
+                        plt.onError(e, 3 /* WillLoadError */, elm);
                     }
                 } catch (e) {
-                    plt.onError(7 /* InitInstanceError */, e, elm);
+                    plt.onError(e, 7 /* InitInstanceError */, elm, true);
                 }
             } else {
                 // already created an instance and this is an update
@@ -1378,7 +1374,7 @@ var s=document.querySelector("script[data-core='matt.core.js'][data-path]");if(s
                         userPromise = elm.$instance.componentWillUpdate();
                     }
                 } catch (e) {
-                    plt.onError(5 /* WillUpdateError */, e, elm);
+                    plt.onError(e, 5 /* WillUpdateError */, elm);
                 }
             }
             if (userPromise && userPromise.then) {
@@ -1396,8 +1392,6 @@ var s=document.querySelector("script[data-core='matt.core.js'][data-path]");if(s
         }
     }
     function renderUpdate(plt, elm, isInitialLoad) {
-        // stop the observer so that we do not observe our own changes
-        stopObserving(plt, elm);
         // if this component has a render function, let's fire
         // it off and generate a vnode for this
         try {
@@ -1405,10 +1399,8 @@ var s=document.querySelector("script[data-core='matt.core.js'][data-path]");if(s
             // _hasRendered was just set
             // _onRenderCallbacks were all just fired off
         } catch (e) {
-            plt.onError(8 /* RenderError */, e, elm);
+            plt.onError(e, 8 /* RenderError */, elm, true);
         }
-        // after render we need to start the observer back up.
-        startObserving(plt, elm);
         try {
             if (isInitialLoad) {
                 // so this was the initial load i guess
@@ -1422,7 +1414,7 @@ var s=document.querySelector("script[data-core='matt.core.js'][data-path]");if(s
             }
         } catch (e) {
             // derp
-            plt.onError(6 /* DidUpdateError */, e, elm);
+            plt.onError(e, 6 /* DidUpdateError */, elm, true);
         }
     }
 
@@ -1648,7 +1640,11 @@ var s=document.querySelector("script[data-core='matt.core.js'][data-path]");if(s
             // each patch always gets a new vnode
             // the host element itself isn't patched because it already exists
             // kick off the actual render and any DOM updates
-            elm._vnode = plt.render(oldVNode, h(null, vnodeHostData, vnodeChildren), isUpdateRender, elm._hostContentNodes);
+            elm._vnode = plt.render(oldVNode, h(null, vnodeHostData, vnodeChildren), isUpdateRender, elm._hostContentNodes, cmpMeta.encapsulation);
+            // attach the styles this component needs, if any
+            // this fn figures out if the styles should go in a
+            // shadow root or if they should be global
+            plt.attachStyles(cmpMeta, elm);
         }
         // it's official, this element has rendered
         elm.$rendered = true;
@@ -1722,12 +1718,8 @@ var s=document.querySelector("script[data-core='matt.core.js'][data-path]");if(s
         try {
             replayQueuedEventsOnInstance(elm);
         } catch (e) {
-            plt.onError(2 /* QueueEventsError */, e, elm);
+            plt.onError(e, 2 /* QueueEventsError */, elm);
         }
-        // Create a mutation observer that will identify changes to the elements
-        // children. When mutations occur rerender.  This only creates the observer
-        // it does not start observing.
-        createMutationObserver(plt, elm);
     }
     function initLoad(plt, elm, hydratedCssClass) {
         var instance = elm.$instance;
@@ -1756,7 +1748,7 @@ var s=document.querySelector("script[data-core='matt.core.js'][data-path]");if(s
                 // we'll also fire this method off on the element, just to
                 instance.componentDidLoad && instance.componentDidLoad();
             } catch (e) {
-                plt.onError(4 /* DidLoadError */, e, elm);
+                plt.onError(e, 4 /* DidLoadError */, elm);
             }
             // add the css class that this element has officially hydrated
             elm.classList.add(hydratedCssClass);
@@ -1794,13 +1786,26 @@ var s=document.querySelector("script[data-core='matt.core.js'][data-path]");if(s
         }
     }
 
+    function useShadowDom(supportsNativeShadowDom, cmpMeta) {
+        return supportsNativeShadowDom && cmpMeta.encapsulation === 1 /* ShadowDom */;
+    }
+    function useScopedCss(supportsNativeShadowDom, cmpMeta) {
+        if (cmpMeta.encapsulation === 2 /* ScopedCss */) {
+                return true;
+            }
+        if (cmpMeta.encapsulation === 1 /* ShadowDom */ && !supportsNativeShadowDom) {
+            return true;
+        }
+        return false;
+    }
+
     function createPlatformClient(Context, App, win, doc, publicPath, hydratedCssClass) {
-        var registry = { 'HTML': {} };
+        var registry = { 'html': {} };
         var moduleImports = {};
-        var moduleCallbacks = {};
-        var loadedModules = {};
-        var loadedStyles = {};
-        var pendingModuleRequests = {};
+        var bundleCallbacks = {};
+        var loadedBundles = {};
+        var styleTemplates = {};
+        var pendingBundleRequests = {};
         var controllerComponents = {};
         var domApi = createDomApi(doc);
         var now = function () {
@@ -1835,13 +1840,15 @@ var s=document.querySelector("script[data-core='matt.core.js'][data-path]");if(s
             loadBundle: loadBundle,
             queue: createQueueClient(Context.dom, now),
             connectHostElement: connectHostElement,
+            attachStyles: attachStyles,
             emitEvent: Context.emit,
             getEventOptions: getEventOptions,
             onError: onError,
             isClient: true
         };
+        var supportsNativeShadowDom = !!Element.prototype.attachShadow;
         // create the renderer that will be used
-        plt.render = createRendererPatch(plt, domApi);
+        plt.render = createRendererPatch(plt, domApi, supportsNativeShadowDom);
         // setup the root element which is the mighty <html> tag
         // the <html> has the final say of when the app has loaded
         var rootElm = domApi.$documentElement;
@@ -1857,9 +1864,9 @@ var s=document.querySelector("script[data-core='matt.core.js'][data-path]");if(s
         function getComponentMeta(elm) {
             // get component meta using the element
             // important that the registry has upper case tag names
-            return registry[elm.tagName];
+            return registry[elm.tagName.toLowerCase()];
         }
-        function connectHostElement(elm, slotMeta) {
+        function connectHostElement(cmpMeta, elm) {
             // set the "mode" property
             if (!elm.mode) {
                 // looks like mode wasn't set as a property directly yet
@@ -1868,11 +1875,18 @@ var s=document.querySelector("script[data-core='matt.core.js'][data-path]");if(s
                 elm.mode = domApi.$getAttribute(elm, 'mode') || Context.mode;
             }
             // host element has been connected to the DOM
-            if (!domApi.$getAttribute(elm, SSR_VNODE_ID)) {
+            if (!domApi.$getAttribute(elm, SSR_VNODE_ID) && !useShadowDom(supportsNativeShadowDom, cmpMeta)) {
+                // only required when we're not using native shadow dom (slot)
                 // this host element was NOT created with SSR
                 // let's pick out the inner content for slot projection
-                assignHostContentSlots(domApi, elm, slotMeta);
+                assignHostContentSlots(domApi, elm, cmpMeta.slotMeta);
             }
+            if (!supportsNativeShadowDom && cmpMeta.encapsulation === 1 /* ShadowDom */) {
+                    // this component should use shadow dom
+                    // but this browser doesn't support it
+                    // so let's polyfill a few things for the user
+                    elm.shadowRoot = elm;
+                }
         }
         function registerComponents(components) {
             // this is the part that just registers the minimal amount of data
@@ -1882,7 +1896,7 @@ var s=document.querySelector("script[data-core='matt.core.js'][data-path]");if(s
             });
         }
         function defineComponent(cmpMeta, HostElementConstructor) {
-            var tagName = cmpMeta.tagNameMeta.toLowerCase();
+            var tagName = cmpMeta.tagNameMeta;
             if (globalDefined.indexOf(tagName) === -1) {
                 // keep an array of all the defined components, useful for external frameworks
                 globalDefined.push(tagName);
@@ -1904,82 +1918,85 @@ var s=document.querySelector("script[data-core='matt.core.js'][data-path]");if(s
                         cmpMeta.membersMeta[propName].attribName);
                     }
                 }
+                // set the array of all the attributes to keep an eye on
+                // https://www.youtube.com/watch?v=RBs21CFBALI
                 HostElementConstructor.observedAttributes = observedAttributes;
                 // define the custom element
                 win.customElements.define(tagName, HostElementConstructor);
             }
         }
         function isDefinedComponent(elm) {
+            // check if this component is already defined or not
             return globalDefined.indexOf(elm.tagName.toLowerCase()) > -1 || !!getComponentMeta(elm);
         }
-        App.loadComponents = function loadComponents(moduleId, importFn) {
+        App.loadComponents = function loadComponents(bundleId, importFn) {
+            // https://youtu.be/Z-FPimCmbX8?t=31
+            // jsonp tag team callback from requested bundles contain tags
             var args = arguments;
             // import component function
             // inject globals
             importFn(moduleImports, h, t, Context, publicPath);
             for (var i = 2; i < args.length; i++) {
                 // parse the external component data into internal component meta data
-                // then add our set of prototype methods to the component module
+                // then add our set of prototype methods to the component bundle
                 parseComponentMeta(registry, moduleImports, args[i]);
             }
-            // fire off all the callbacks waiting on this module to load
-            var callbacks = moduleCallbacks[moduleId];
+            // fire off all the callbacks waiting on this bundle to load
+            var callbacks = bundleCallbacks[bundleId];
             if (callbacks) {
                 for (i = 0; i < callbacks.length; i++) {
                     callbacks[i]();
                 }
-                delete moduleCallbacks[moduleId];
+                delete bundleCallbacks[bundleId];
             }
-            // remember that we've already loaded this module
-            loadedModules[moduleId] = true;
+            // remember that we've already loaded this bundle
+            loadedBundles[bundleId] = true;
+        };
+        App.loadStyles = function loadStyles() {
+            // jsonp callback from requested bundles
+            // either directly add styles to document.head or add the
+            // styles to a template tag to be cloned later for shadow roots
+            var args = arguments;
+            var templateElm = void 0;
+            for (var i = 0; i < args.length; i += 2) {
+                // create the template element which will hold the styles
+                // adding it to the dom via <template> so that we can
+                // clone this for each potential shadow root that will need these styles
+                // otherwise it'll be cloned and added to the entire document
+                // but that's for the renderer to figure out later
+                styleTemplates[args[i]] = templateElm = domApi.$createElement('template');
+                // add the style text to the template element
+                templateElm.innerHTML = '<style>' + args[i + 1] + '</style>';
+                // give it an unique id
+                templateElm.id = 'tmp-' + args[i];
+                // add our new element to the head
+                domApi.$appendChild(domApi.$head, templateElm);
+            }
         };
         function loadBundle(cmpMeta, elm, cb) {
-            var moduleId = cmpMeta.moduleId;
-            if (loadedModules[moduleId]) {
-                // sweet, we've already loaded this module
+            var bundleId = cmpMeta.bundleIds[elm.mode] || cmpMeta.bundleIds;
+            if (loadedBundles[bundleId]) {
+                // sweet, we've already loaded this bundle
                 cb();
             } else {
-                // never seen this module before, let's start the request
+                // never seen this bundle before, let's start the request
                 // and add it to the callbacks to fire when it has loaded
-                if (moduleCallbacks[moduleId]) {
-                    moduleCallbacks[moduleId].push(cb);
-                } else {
-                    moduleCallbacks[moduleId] = [cb];
-                }
-                // start the request for the component module
-                requestModule(moduleId);
-                // we also need to load the css file in the head
-                // we've already figured out and set "mode" as a property to the element
-                var styleId = cmpMeta.styleIds[elm.mode] || cmpMeta.styleIds.$;
-                if (styleId && !loadedStyles[styleId]) {
-                    // this style hasn't been added to the head yet
-                    loadedStyles[styleId] = true;
-                    // append this link element to the head, which starts the request for the file
-                    var linkElm = domApi.$createElement('link');
-                    linkElm.href = publicPath + styleId + '.css';
-                    linkElm.rel = 'stylesheet';
-                    // insert these styles after the last styles we've already inserted
-                    // which could include the SSR styles, or the loader's hydrate css script's styles
-                    var insertedStyles = domApi.$head.querySelectorAll('[data-styles]');
-                    var insertBeforeRef = insertedStyles[insertedStyles.length - 1] || domApi.$head.firstChild;
-                    if (insertBeforeRef) {
-                        insertBeforeRef = insertBeforeRef.nextSibling;
-                    }
-                    domApi.$insertBefore(domApi.$head, linkElm, insertBeforeRef);
-                }
+                (bundleCallbacks[bundleId] = bundleCallbacks[bundleId] || []).push(cb);
+                // figure out which bundle to request and kick it off
+                requestBundle(cmpMeta, bundleId);
             }
         }
-        function requestModule(moduleId) {
+        function requestBundle(cmpMeta, bundleId) {
             // create the url we'll be requesting
-            var url = publicPath + moduleId + '.js';
-            if (pendingModuleRequests[url]) {
+            var url = publicPath + bundleId + ((useScopedCss(supportsNativeShadowDom, cmpMeta) ? '.sc' : '') + '.js');
+            if (pendingBundleRequests[url]) {
                 // we're already actively requesting this url
                 // no need to do another request
                 return;
             }
-            // let's kick off the module request
+            // let's kick off the bundle request
             // remember that we're now actively requesting this url
-            pendingModuleRequests[url] = true;
+            pendingBundleRequests[url] = true;
             // create a sript element to add to the document.head
             var scriptElm = domApi.$createElement('script');
             scriptElm.charset = 'utf-8';
@@ -1992,13 +2009,40 @@ var s=document.querySelector("script[data-core='matt.core.js'][data-path]");if(s
                 scriptElm.onerror = scriptElm.onload = null;
                 domApi.$removeChild(scriptElm.parentNode, scriptElm);
                 // remove from our list of active requests
-                delete pendingModuleRequests[url];
+                delete pendingBundleRequests[url];
             }
             // add script completed listener to this script element
             scriptElm.onerror = scriptElm.onload = onScriptComplete;
             // inject a script tag in the head
             // kick off the actual request
             domApi.$appendChild(domApi.$head, scriptElm);
+        }
+        function attachStyles(cmpMeta, elm) {
+            var tagForStyles = cmpMeta.tagNameMeta;
+            var templateElm = styleTemplates[tagForStyles];
+            if (templateElm) {
+                var styleContainerNode = domApi.$head;
+                if (supportsNativeShadowDom) {
+                    if (cmpMeta.encapsulation === 1 /* ShadowDom */) {
+                            styleContainerNode = elm.shadowRoot;
+                        } else {
+                        while (elm = domApi.$parentNode(elm)) {
+                            if (elm.host && elm.host.shadowRoot) {
+                                styleContainerNode = elm.host.shadowRoot;
+                                break;
+                            }
+                        }
+                    }
+                }
+                var appliedStyles = styleContainerNode._appliedStyles = styleContainerNode._appliedStyles || {};
+                if (!appliedStyles[tagForStyles]) {
+                    // we haven't added these styles to this element yet
+                    var styleElm = templateElm.content.cloneNode(true);
+                    domApi.$insertBefore(styleContainerNode, styleElm, styleContainerNode.firstChild);
+                    // remember we don't need to do this again for this element
+                    appliedStyles[tagForStyles] = true;
+                }
+            }
         }
         var WindowCustomEvent = win.CustomEvent;
         if (typeof WindowCustomEvent !== 'function') {
@@ -2025,8 +2069,8 @@ var s=document.querySelector("script[data-core='matt.core.js'][data-path]");if(s
                 passive: !!usePassive
             } : !!useCapture;
         }
-        function onError(type, err, elm) {
-            console.error(type, err, elm.tagName);
+        function onError(err, type, elm) {
+            console.error(err, type, elm && elm.tagName);
         }
         function propConnect(ctrlTag) {
             return proxyController(domApi, controllerComponents, ctrlTag);

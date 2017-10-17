@@ -1,5 +1,5 @@
 /*! Built with http://stenciljs.com */
-(function (window, document, appNamespace, hydrateCssClass, publicPath, appCore, appCorePolyfilled, components, x, i) {
+(function (window, document, appNamespace, publicPath, appCore, appCorePolyfilled, components, x, i) {
     'use strict';
     // create global namespace if it doesn't already exist
 
@@ -7,10 +7,11 @@
     // auto hide components until they been fully hydrated
     // reusing the "x" variable from the args for funzies
     x = document.createElement('style');
-    x.setAttribute('data-styles', '');
-    x.innerHTML = (components.map(function (c) {
+    x.innerHTML = components.filter(function (c) {
+        return c[2];
+    }).map(function (c) {
         return c[0];
-    }).join(',') + '{visibility:hidden}.' + hydrateCssClass + '{visibility:inherit}').toLowerCase();
+    }).join() + '{visibility:hidden}';
     document.head.insertBefore(x, document.head.firstChild);
     // get this current script
     appNamespace = appNamespace.toLowerCase();
@@ -29,4 +30,4 @@
     x.setAttribute('data-path', publicPath);
     x.setAttribute('data-core', appCore);
     document.head.appendChild(x);
-})(window, document, "matt","hydrated","/build/matt/","matt.core.js","matt.core.pf.js",[["IONITRON-CLIPPY","ionitron-clippy",{"$":"ionitron-clippy"},[["message",1,1]]]]);
+})(window, document, "matt","/build/matt/","matt.core.js","matt.core.pf.js",[["ionitron-clippy","ionitron-clippy",1,[["message",1,1]],1]]);

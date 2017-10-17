@@ -2,79 +2,77 @@ $text: #444;
 $bubblebg: lightyellow;
 $bubbleborder: $text;
 
-ionitron-clippy {
+.container{
+  position:fixed;
+  right:25px;
+  bottom:25px;
+
   font-family: Arial, sans-serif;
   font-size: 14px;
   color: $text;
 
-  .container{
-    position:fixed;
-    right:25px;
-    bottom:25px;
-
-    .ionitron {
-      height: 150px;
-      -webkit-animation-name: Floatingx;
-      -webkit-animation-duration: 3s;
-      -webkit-animation-iteration-count: infinite;
-      -webkit-animation-timing-function: ease-in-out;
-    }
-
-    @-webkit-keyframes Floatingx{
-      from {-webkit-transform:translate(0, 0px);}
-      65% {-webkit-transform:translate(0, 15px);}
-      to {-webkit-transform: translate(0, -0px);    }
-    }
-
+  .ionitron {
+    height: 150px;
+    -webkit-animation-name: Floatingx;
+    -webkit-animation-duration: 3s;
+    -webkit-animation-iteration-count: infinite;
+    -webkit-animation-timing-function: ease-in-out;
   }
 
-  /* CSS talk bubble */
-  .talk-bubble {
-    margin: 40px;
-    display: inline-block;
-    position: relative;
-    width: 200px;
-    height: auto;
-    background-color: $bubblebg;
-    border: 2px solid $bubbleborder;
-    border-radius: 10px;
-    -webkit-border-radius: 10px;
-    -moz-border-radius: 10px;
-
-    &:after,
-    &:before {
-      content: ' ';
-      position: absolute;
-      width: 0;
-      height: 0;
-      top: auto;
-      left: auto;
-    }
-
-    &:after {
-      right: -20px;
-      bottom: 38px;
-      border: 12px solid;
-      border-color: $bubblebg transparent transparent $bubblebg;
-    }
-
-    &:before {
-      right: -25px;
-      bottom: 40px;
-      border: 12px solid;
-      border-color: $bubbleborder transparent transparent $bubbleborder;
-    }
+  @-webkit-keyframes Floatingx{
+    from {-webkit-transform:translate(0, 0px);}
+    65% {-webkit-transform:translate(0, 15px);}
+    to {-webkit-transform: translate(0, -0px);    }
   }
 
-  .talk-text {
-    padding: 10px 13px;
-    text-align: left;
-    line-height: 1.5em;
+}
 
-    p {
-      /* remove webkit p margins */
-      -webkit-margin-before: 0em;
-      -webkit-margin-after: 0em;
-    }
+/* CSS talk bubble */
+.talk-bubble {
+  margin: 40px;
+  display: inline-block;
+  position: relative;
+  width: 200px;
+  height: auto;
+  background-color: $bubblebg;
+  border: 2px solid $bubbleborder;
+  border-radius: 10px;
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+
+  &:after,
+  &:before {
+    content: ' ';
+    position: absolute;
+    width: 0;
+    height: 0;
+    top: auto;
+    left: auto;
+  }
+
+  &:after {
+    right: -20px;
+    bottom: 38px;
+    border: 12px solid;
+    border-color: $bubblebg transparent transparent $bubblebg;
+  }
+
+  &:before {
+    right: -25px;
+    bottom: 40px;
+    border: 12px solid;
+    border-color: $bubbleborder transparent transparent $bubbleborder;
+  }
+}
+
+.talk-text {
+  padding: 10px 13px;
+  text-align: left;
+  line-height: 1.5em;
+
+  p {
+    /* remove webkit p margins */
+    -webkit-margin-before: 0em;
+    -webkit-margin-after: 0em;
   }
 }

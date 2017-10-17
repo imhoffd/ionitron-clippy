@@ -2,7 +2,8 @@ import { Component, Prop } from '@stencil/core';
 
 @Component({
   tag: 'ionitron-clippy',
-  styleUrl: 'ionitron-clippy.scss'
+  styleUrl: 'ionitron-clippy.scss',
+  shadow: true
 })
 export class MyName {
   @Prop() message: string;

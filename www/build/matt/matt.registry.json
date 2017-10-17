@@ -1,0 +1,21 @@
+{
+  "namespace": "matt",
+  "components": [
+    [
+      "ionitron-clippy",
+      "ionitron-clippy",
+      1,
+      [
+        [
+          "message",
+          1,
+          1
+        ]
+      ],
+      1
+    ]
+  ],
+  "loader": "../matt.js",
+  "core": "matt.core.js",
+  "corePolyfilled": "matt.core.pf.js"
+}
