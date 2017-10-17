@@ -1,0 +1,26 @@
+<!doctype html>
+<html dir="ltr" lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Ionitron Clippy Demo</title>
+
+  <script src="./build/matt.js"></script>
+</head>
+<body>
+
+  <ionitron-clippy></ionitron-clippy>
+
+
+  <script>
+    if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+      // auto-unregister service worker during dev mode
+      navigator.serviceWorker.ready.then(registration => {
+        registration.unregister().then(() => {
+          location.reload(true);
+        });
+      });
+    }
+  </script>
+
+</body>
+</html>
