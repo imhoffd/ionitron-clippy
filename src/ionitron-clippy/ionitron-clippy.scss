@@ -1,9 +1,13 @@
+$text: #444;
+$bubblebg: lightyellow;
+$bubbleborder: $text;
+
 ionitron-clippy {
-  font-family: Courier New, Courier, monospace;
-  font-weight: bold;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  color: $text;
 
-  .ionitron-clippy-container{
-
+  .container{
     position:fixed;
     right:25px;
     bottom:25px;
@@ -15,7 +19,7 @@ ionitron-clippy {
       -webkit-animation-iteration-count: infinite;
       -webkit-animation-timing-function: ease-in-out;
     }
-  
+
     @-webkit-keyframes Floatingx{
       from {-webkit-transform:translate(0, 0px);}
       65% {-webkit-transform:translate(0, 15px);}
@@ -31,31 +35,46 @@ ionitron-clippy {
     position: relative;
     width: 200px;
     height: auto;
-    background-color: lightyellow;
+    background-color: $bubblebg;
+    border: 2px solid $bubbleborder;
+    border-radius: 10px;
+    -webkit-border-radius: 10px;
+    -moz-border-radius: 10px;
+
+    &:after,
+    &:before {
+      content: ' ';
+      position: absolute;
+      width: 0;
+      height: 0;
+      top: auto;
+      left: auto;
+    }
+
+    &:after {
+      right: -20px;
+      bottom: 38px;
+      border: 12px solid;
+      border-color: $bubblebg transparent transparent $bubblebg;
+    }
+
+    &:before {
+      right: -25px;
+      bottom: 40px;
+      border: 12px solid;
+      border-color: $bubbleborder transparent transparent $bubbleborder;
+    }
   }
 
-  .tri-right.right-in:after{
-    content: ' ';
-    position: absolute;
-    width: 0;
-    height: 0;
-    left: auto;
-    right: -20px;
-    bottom: 38px;
-    top: auto;
-    border: 12px solid;
-    border-color: lightyellow transparent transparent lightyellow;
-  }
-  /* talk bubble contents */
-  .talktext{
-    padding: 1em;
+  .talk-text {
+    padding: 10px 13px;
     text-align: left;
     line-height: 1.5em;
-  }
-  .talktext p{
-    /* remove webkit p margins */
-    -webkit-margin-before: 0em;
-    -webkit-margin-after: 0em;
-  }
 
+    p {
+      /* remove webkit p margins */
+      -webkit-margin-before: 0em;
+      -webkit-margin-after: 0em;
+    }
+  }
 }

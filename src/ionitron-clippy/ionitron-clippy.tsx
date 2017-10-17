@@ -9,10 +9,10 @@ export class MyName {
 
   render() {
     return (
-      <div class="ionitron-clippy-container">
-        <div class="talk-bubble tri-right right-in">
-          <div class="talktext">
-            <p>CSS Talk Bubble configured by classes. Defaults to square shape, no triangle. Height is auto-adjusting to the height of the text.</p>
+      <div class="container">
+        <div class="talk-bubble">
+          <div class="talk-text">
+            <p>Hi, I'm Ionitron. I'm the Ionic assistent and my job is to help you create great apps! Do you need assistance?</p>
           </div>
         </div>
         <img src="./assets/ionitron.png" class="ionitron" />
