@@ -1,6 +1,12 @@
 exports.config = {
+  namespace: 'matt',
   bundles: [
     { components: ['ionitron-clippy'] }
   ],
-  buildDir: "dist",
+  generateDistribution: true,
+};
+
+exports.devServer = {
+  root: 'www',
+  watchGlob: '**/**'
 };

@@ -11,7 +11,7 @@ export class MyName {
   render() {
     return (
       <div>
-        <img src="http://ionic-io-assets.s3.amazonaws.com/ionitron-avatar.png" class="ionitron" />
+        <img src="./assets/ionitron.png" class="ionitron" />
       </div>
     );
   }
