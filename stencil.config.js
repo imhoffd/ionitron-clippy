@@ -1,5 +1,5 @@
 exports.config = {
-  namespace: 'matt',
+  namespace: 'clippytron',
   bundles: [
     { components: ['ionitron-clippy'] }
   ],
