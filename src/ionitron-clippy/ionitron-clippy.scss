@@ -1,0 +1,18 @@
+ionitron-clippy {
+  font-family: Courier New, Courier, monospace;
+  font-weight: bold;
+
+  .ionitron {
+    height: 150px;
+    -webkit-animation-name: Floatingx;
+    -webkit-animation-duration: 3s;
+    -webkit-animation-iteration-count: infinite;
+    -webkit-animation-timing-function: ease-in-out;
+  }
+
+  @-webkit-keyframes Floatingx{
+    from {-webkit-transform:translate(0, 0px);}
+    65% {-webkit-transform:translate(0, 15px);}
+    to {-webkit-transform: translate(0, -0px);    }
+  }
+}
