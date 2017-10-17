@@ -4,7 +4,7 @@
   "description": "",
   "main": "dist/collection/index.js",
   "types": "dist/collection/index.d.ts",
-  "browser": "dist/matt.js",
+  "browser": "dist/clippytron.js",
   "collection": "dist/collection/collection-manifest.json",
   "dependencies": {},
   "devDependencies": {
