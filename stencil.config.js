@@ -4,6 +4,7 @@ exports.config = {
     { components: ['ionitron-clippy'] }
   ],
   generateDistribution: true,
+  generateWWW: true
 };
 
 exports.devServer = {
