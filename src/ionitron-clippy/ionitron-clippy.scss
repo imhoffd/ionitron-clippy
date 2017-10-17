@@ -2,7 +2,8 @@ $text: #444;
 $bubblebg: lightyellow;
 $bubbleborder: $text;
 
-.container{
+.container {
+  transition: opacity .5s ease-in-out;
   position:fixed;
   right:25px;
   bottom:25px;
@@ -11,20 +12,19 @@ $bubbleborder: $text;
   font-size: 14px;
   color: $text;
 
-  .ionitron {
-    height: 150px;
-    -webkit-animation-name: Floatingx;
-    -webkit-animation-duration: 3s;
-    -webkit-animation-iteration-count: infinite;
-    -webkit-animation-timing-function: ease-in-out;
-  }
-
   @-webkit-keyframes Floatingx{
     from {-webkit-transform:translate(0, 0px);}
     65% {-webkit-transform:translate(0, 15px);}
-    to {-webkit-transform: translate(0, -0px);    }
+    to {-webkit-transform: translate(0, -0px);}
   }
+}
 
+.ionitron {
+  height: 150px;
+  -webkit-animation-name: Floatingx;
+  -webkit-animation-duration: 3s;
+  -webkit-animation-iteration-count: infinite;
+  -webkit-animation-timing-function: ease-in-out;
 }
 
 /* CSS talk bubble */
@@ -63,6 +63,30 @@ $bubbleborder: $text;
     border: 12px solid;
     border-color: $bubbleborder transparent transparent $bubbleborder;
   }
+
+  ul {
+    list-style: none;
+    margin: 10px 0 0;
+    padding: 0;
+
+    li {
+      padding-left: 30px;
+      position: relative;
+
+      &:before {
+        $s: 10px;
+        content: ' ';
+        background: url('./assets/bullet.png');
+        background-size: $s $s;
+        width: $s;
+        height: $s;
+        position: absolute;
+        top: 5px;
+        left: 10px;
+        display: block;
+      }
+    }
+  }
 }
 
 .talk-text {
@@ -74,5 +98,9 @@ $bubbleborder: $text;
     /* remove webkit p margins */
     -webkit-margin-before: 0em;
     -webkit-margin-after: 0em;
+  }
+
+  li, span {
+    cursor: pointer;
   }
 }
