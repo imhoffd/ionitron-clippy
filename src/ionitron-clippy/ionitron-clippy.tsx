@@ -25,7 +25,7 @@ export class IonitronClippy {
   getScreen() {
     if (this.screen === 'intro') {
       return [
-        <p>Hi, I'm Ionitron. I'm the Ionic assistent and my job is to help you create great apps! Do you need assistance?</p>,
+        <p>Hi, I'm Ionitron. I'm the Ionic assistant and my job is to help you create great apps! Do you need assistance?</p>,
         <ul>
           <li onClick={ e => this.changeScreen(e, 'yes') }>Yes</li>
           <li onClick={ e => this.changeScreen(e, 'back', true) }>No, thanks!</li>
