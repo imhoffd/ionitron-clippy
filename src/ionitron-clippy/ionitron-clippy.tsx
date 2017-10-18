@@ -3,11 +3,8 @@ import { Component, Prop, State } from '@stencil/core';
 @Component({
   tag: 'ionitron-clippy',
   styleUrl: 'ionitron-clippy.scss',
-  // shadow: true
 })
-export class MyName {
-  @Prop() message: string;
-
+export class IonitronClippy {
   @State() screen: string = 'intro';
   @State() visible: boolean = true;
 
